@@ -13,15 +13,12 @@ class_names = [
     "cachorro", "sapo", "cavalo", "navio", "caminhão"
 ]
 
-# Média e desvio padrão do CIFAR-10 (calculados a partir dos dados de treino)
+# Média e desvio padrão do CIFAR-10
 mean = 125.3
 std = 63.0
 
 def preprocess_user_image(cropped_img, mean, std):
-    # Redimensionar para 32x32
     resized_img = cropped_img.resize((32, 32), Image.Resampling.LANCZOS)
-
-    # Converter para array e normalizar
     img_array = np.array(resized_img).astype('float32')
     if img_array.shape != (32, 32, 3):
         raise ValueError(f"Shape inesperado: {img_array.shape}. Esperado (32, 32, 3)")
@@ -58,11 +55,16 @@ if uploaded_file is not None:
     original_img = Image.open(uploaded_file).convert("RGB")
     st.markdown("🖱️ **Selecione o objeto principal desenhando um retângulo sobre a imagem abaixo:**")
 
-    # Canvas de seleção
+    try:
+        background_np = np.array(original_img)
+    except Exception as e:
+        st.error("Erro ao converter a imagem para exibição no canvas.")
+        st.stop()
+
     canvas_result = st_canvas(
         fill_color="rgba(0, 0, 255, 0.2)",
         stroke_width=2,
-        background_image=np.array(original_img),
+        background_image=background_np,
         update_streamlit=True,
         height=original_img.height,
         width=original_img.width,
@@ -77,11 +79,9 @@ if uploaded_file is not None:
         width = int(obj["width"])
         height = int(obj["height"])
 
-        # Recortar imagem com base na seleção
         cropped_img = original_img.crop((left, top, left + width, top + height))
         st.image(cropped_img, caption="📐 Área selecionada (entrada para o modelo)", use_column_width=False)
 
-        # Classificação
         img_array, resized_img = preprocess_user_image(cropped_img, mean, std)
         class_index, probs = classify_user_image(model, img_array)
         class_name = class_names[class_index]
