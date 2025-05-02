@@ -55,47 +55,38 @@ if uploaded_file is not None:
     original_img = Image.open(uploaded_file).convert("RGB")
     st.markdown("🖱️ **Selecione o objeto principal desenhando um retângulo sobre a imagem abaixo:**")
 
-    try:
-        background_np = np.array(original_img)
-        # Evita erro do canvas com arrays NumPy diretamente
-        background_image_valid = background_np is not None and background_np.ndim == 3
-    except Exception as e:
-        st.error(f"Erro ao processar a imagem: {e}")
-        st.stop()
+    background_img = original_img.copy()  # usar PIL.Image, não array
 
-    if background_image_valid:
-        canvas_result = st_canvas(
-            fill_color="rgba(0, 0, 255, 0.2)",
-            stroke_width=2,
-            background_image=background_np,
-            update_streamlit=True,
-            height=original_img.height,
-            width=original_img.width,
-            drawing_mode="rect",
-            key="canvas"
-        )
+    canvas_result = st_canvas(
+        fill_color="rgba(0, 0, 255, 0.2)",
+        stroke_width=2,
+        background_image=background_img,
+        update_streamlit=True,
+        height=original_img.height,
+        width=original_img.width,
+        drawing_mode="rect",
+        key="canvas"
+    )
 
-        if canvas_result.json_data and len(canvas_result.json_data["objects"]) > 0:
-            obj = canvas_result.json_data["objects"][-1]
-            left = int(obj["left"])
-            top = int(obj["top"])
-            width = int(obj["width"])
-            height = int(obj["height"])
+    if canvas_result.json_data and len(canvas_result.json_data["objects"]) > 0:
+        obj = canvas_result.json_data["objects"][-1]
+        left = int(obj["left"])
+        top = int(obj["top"])
+        width = int(obj["width"])
+        height = int(obj["height"])
 
-            cropped_img = original_img.crop((left, top, left + width, top + height))
-            st.image(cropped_img, caption="📐 Área selecionada (entrada para o modelo)", use_column_width=False)
+        cropped_img = original_img.crop((left, top, left + width, top + height))
+        st.image(cropped_img, caption="📐 Área selecionada (entrada para o modelo)", use_column_width=False)
 
-            img_array, resized_img = preprocess_user_image(cropped_img, mean, std)
-            class_index, probs = classify_user_image(model, img_array)
-            class_name = class_names[class_index]
+        img_array, resized_img = preprocess_user_image(cropped_img, mean, std)
+        class_index, probs = classify_user_image(model, img_array)
+        class_name = class_names[class_index]
 
-            st.success(f"🧠 Classe prevista: **{class_name}**")
+        st.success(f"🧠 Classe prevista: **{class_name}**")
 
-            st.subheader("📊 Confiança do modelo para cada classe:")
-            for i, prob in enumerate(probs):
-                st.write(f"{class_names[i]}: {prob:.4f}")
-                st.progress(float(prob))
-        else:
-            st.warning("⬅️ Desenhe um retângulo sobre a imagem para selecionar o objeto que deseja classificar.")
+        st.subheader("📊 Confiança do modelo para cada classe:")
+        for i, prob in enumerate(probs):
+            st.write(f"{class_names[i]}: {prob:.4f}")
+            st.progress(float(prob))
     else:
-        st.error("❌ A imagem não pôde ser usada como fundo do canvas. Verifique o formato.")
+        st.warning("⬅️ Desenhe um retângulo sobre a imagem para selecionar o objeto que deseja classificar.")
