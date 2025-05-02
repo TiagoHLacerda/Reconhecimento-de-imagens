@@ -57,18 +57,25 @@ if uploaded_file is not None:
         original_img = original_img.convert("RGB")
     st.markdown("🖱️ **Selecione o objeto principal desenhando um retângulo sobre a imagem abaixo:**")
 
-    background_img = original_img.copy()
+    # Garantir que esteja em RGB e converter para array de forma segura
+    original_img = Image.open(uploaded_file)
+    if original_img.mode != "RGB":
+        original_img = original_img.convert("RGB")
 
+        background_np = np.asarray(original_img)
+
+# Agora, passe o array corretamente ao canvas
     canvas_result = st_canvas(
-        fill_color="rgba(0, 0, 255, 0.2)",
-        stroke_width=2,
-        background_image=background_img,
-        update_streamlit=True,
-        height=original_img.height,
-        width=original_img.width,
-        drawing_mode="rect",
-        key="canvas"
-    )
+    fill_color="rgba(0, 0, 255, 0.2)",
+    stroke_width=2,
+    background_image=background_np,  # ← Agora NumPy válido
+    update_streamlit=True,
+    height=original_img.height,
+    width=original_img.width,
+    drawing_mode="rect",
+    key="canvas"
+)
+
 
     if canvas_result.json_data and len(canvas_result.json_data["objects"]) > 0:
         obj = canvas_result.json_data["objects"][-1]
