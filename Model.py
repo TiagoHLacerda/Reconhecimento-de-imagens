@@ -22,20 +22,28 @@ def center_crop(img: Image.Image) -> Image.Image:
     return img.crop((left, top, left + side, top + side))
 
 def preprocess_user_image(image_file, mean, std):
+    # Abrir imagem e forçar para RGB (mesmo se já for)
     original_img = Image.open(image_file).convert('RGB')
 
-    # Crop centralizado
+    # Crop centralizado quadrado
     cropped_img = center_crop(original_img)
 
     # Reduzindo para 32x32 com suavização moderna
     resized_img = cropped_img.resize((32, 32), Image.Resampling.LANCZOS)
 
-    # Normalização
+    # Garantir que tenha shape (32, 32, 3)
     img_array = np.array(resized_img).astype('float32')
+    if img_array.shape != (32, 32, 3):
+        raise ValueError(f"Erro: imagem com shape inesperado {img_array.shape}. Esperado (32, 32, 3)")
+
+    # Normalizar
     img_array = (img_array - mean) / std
+
+    # Adicionar dimensão do batch: (1, 32, 32, 3)
     img_array = np.expand_dims(img_array, axis=0)
 
     return img_array, original_img
+
 
 
 def classify_user_image(model, img_array):
