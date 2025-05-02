@@ -40,7 +40,9 @@ def classify_user_image(model, img_array):
 
 # --- Interface Streamlit ---
 st.title("🔍 Reconhecimento de Imagens - CIFAR-10")
+st.markdown("Nos trenamentos com imagens do repositorio cifar 10 atingiu 87% de accuraci nas imagens")
 st.markdown("### Este modelo reconhece as seguintes categorias:")
+
 st.markdown("""
 - ✈️ Avião  
 - 🚗 Automóvel  
