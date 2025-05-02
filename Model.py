@@ -27,8 +27,8 @@ def preprocess_user_image(image_file, mean, std):
     # Crop centralizado
     cropped_img = center_crop(original_img)
 
-    # Reduzindo para 32x32 com antialiasing
-    resized_img = cropped_img.resize((32, 32), Image.ANTIALIAS)
+    # Reduzindo para 32x32 com suavização moderna
+    resized_img = cropped_img.resize((32, 32), Image.Resampling.LANCZOS)
 
     # Normalização
     img_array = np.array(resized_img).astype('float32')
@@ -36,6 +36,7 @@ def preprocess_user_image(image_file, mean, std):
     img_array = np.expand_dims(img_array, axis=0)
 
     return img_array, original_img
+
 
 def classify_user_image(model, img_array):
     predictions = model.predict(img_array)
