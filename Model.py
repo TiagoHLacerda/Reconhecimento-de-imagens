@@ -57,24 +57,33 @@ if uploaded_file is not None:
 
     img_width, img_height = original_img.size
 
-    st.markdown("🔧 **Defina a área de recorte do objeto:**")
-    left = st.slider("Esquerda", 0, img_width - 1, 0)
-    top = st.slider("Topo", 0, img_height - 1, 0)
-    width = st.slider("Largura", 10, img_width - left, min(100, img_width - left))
-    height = st.slider("Altura", 10, img_height - top, min(100, img_height - top))
+    st.markdown("🔧 **Defina a área do objeto para recorte:**")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        left = st.slider("📍 Esquerda (px)", 0, img_width - 10, 0)
+        width = st.slider("↔️ Largura (px)", 10, img_width, 100)
+    with col2:
+        top = st.slider("📍 Topo (px)", 0, img_height - 10, 0)
+        height = st.slider("↕️ Altura (px)", 10, img_height, 100)
 
-    # Recortar e exibir
+    # Garantir que o recorte não ultrapasse a imagem
+    if left + width > img_width:
+        width = img_width - left
+    if top + height > img_height:
+        height = img_height - top
+
     cropped_img = original_img.crop((left, top, left + width, top + height))
     st.image(cropped_img, caption="📐 Recorte selecionado", use_column_width=False)
 
-    # Classificar
-    img_array, resized_img = preprocess_user_image(cropped_img, mean, std)
-    class_index, probs = classify_user_image(model, img_array)
-    class_name = class_names[class_index]
+    if st.button("🔍 Analisar imagem"):
+        img_array, resized_img = preprocess_user_image(cropped_img, mean, std)
+        class_index, probs = classify_user_image(model, img_array)
+        class_name = class_names[class_index]
 
-    st.success(f"🧠 Classe prevista: **{class_name}**")
+        st.success(f"🧠 Classe prevista: **{class_name}**")
 
-    st.subheader("📊 Confiança do modelo para cada classe:")
-    for i, prob in enumerate(probs):
-        st.write(f"{class_names[i]}: {prob:.4f}")
-        st.progress(float(prob))
+        st.subheader("📊 Confiança do modelo para cada classe:")
+        for i, prob in enumerate(probs):
+            st.write(f"{class_names[i]}: {prob:.4f}")
+            st.progress(float(prob))
