@@ -62,7 +62,7 @@ if uploaded_file is not None:
     canvas_result = st_canvas(
         fill_color="rgba(0, 0, 255, 0.2)",
         stroke_width=2,
-        background_image=np.array(original_img)
+        background_image=np.array(original_img),
         update_streamlit=True,
         height=original_img.height,
         width=original_img.width,
