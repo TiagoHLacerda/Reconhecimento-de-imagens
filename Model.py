@@ -52,10 +52,12 @@ st.markdown("""
 uploaded_file = st.file_uploader("📷 Envie uma imagem:", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    original_img = Image.open(uploaded_file).convert("RGB")
+    original_img = Image.open(uploaded_file)
+    if original_img.mode != "RGB":
+        original_img = original_img.convert("RGB")
     st.markdown("🖱️ **Selecione o objeto principal desenhando um retângulo sobre a imagem abaixo:**")
 
-    background_img = original_img.copy()  # usar PIL.Image, não array
+    background_img = original_img.copy()
 
     canvas_result = st_canvas(
         fill_color="rgba(0, 0, 255, 0.2)",
