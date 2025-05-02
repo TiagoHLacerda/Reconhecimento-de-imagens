@@ -13,23 +13,23 @@ class_names = ["avião", "automóvel", "pássaro", "gato", "veado", "cachorro", 
 mean = 125.3
 std = 63.0
 
-def center_crop(img: Image.Image) -> Image.Image:
-    """Faz crop centralizado quadrado."""
-    width, height = img.size
-    side = min(width, height)
-    left = (width - side) // 2
-    top = (height - side) // 2
-    return img.crop((left, top, left + side, top + side))
+#def center_crop(img: Image.Image) -> Image.Image:
+ #   """Faz crop centralizado quadrado."""
+  #  width, height = img.size
+   # side = min(width, height)
+   # left = (width - side) // 2
+   # top = (height - side) // 2
+   # return img.crop((left, top, left + side, top + side))
 
 def preprocess_user_image(image_file, mean, std):
     # Abrir imagem e forçar para RGB (mesmo se já for)
     original_img = Image.open(image_file).convert('RGB')
 
     # Crop centralizado quadrado
-    cropped_img = center_crop(original_img)
+    #cropped_img = center_crop(original_img)
 
     # Reduzindo para 32x32 com suavização moderna
-    resized_img = cropped_img.resize((32, 32), Image.Resampling.LANCZOS)
+    resized_img = image_file.resize((32, 32), Image.Resampling.LANCZOS)
 
     # Garantir que tenha shape (32, 32, 3)
     img_array = np.array(resized_img).astype('float32')
