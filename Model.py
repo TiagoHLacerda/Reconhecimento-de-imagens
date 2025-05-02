@@ -23,7 +23,7 @@ def preprocess_user_image(image_file, mean, std):
 
     # Comprimir imagem para reduzir tamanho (<50 KB)
     buffer = io.BytesIO()
-    resized_img.save(buffer, format="JPEG", optimize=True, quality=50)  # Qualidade ajustável (30~85)
+    resized_img.save(buffer, format="JPEG", optimize=True, quality=30)  # Qualidade ajustável (30~85)
     buffer.seek(0)
 
     # Reabrir imagem comprimida
