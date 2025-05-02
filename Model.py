@@ -1,37 +1,50 @@
 import streamlit as st
 from PIL import Image
 import numpy as np
-import matplotlib.pyplot as plt
 from tensorflow.keras.models import load_model
 
-# Carregar modelo treinado (deve estar na mesma pasta que este arquivo .py)
+# Carregar modelo
 model = load_model("cifar10_model.h5")
 
-# Classes do CIFAR-10
+# Classes CIFAR-10
 class_names = ["avião", "automóvel", "pássaro", "gato", "veado", "cachorro", "sapo", "cavalo", "navio", "caminhão"]
 
-# Média e desvio padrão do CIFAR-10
+# Estatísticas do CIFAR-10
 mean = 125.3
 std = 63.0
 
+def center_crop(img: Image.Image) -> Image.Image:
+    """Faz crop centralizado quadrado."""
+    width, height = img.size
+    side = min(width, height)
+    left = (width - side) // 2
+    top = (height - side) // 2
+    return img.crop((left, top, left + side, top + side))
+
 def preprocess_user_image(image_file, mean, std):
-    original_img = Image.open(image_file).convert('RGB')  # Salva a original
-    img = original_img.resize((32, 32))  # Redimensiona só para o modelo
-    img_array = np.array(img)
+    original_img = Image.open(image_file).convert('RGB')
+
+    # Crop centralizado
+    cropped_img = center_crop(original_img)
+
+    # Reduzindo para 32x32 com antialiasing
+    resized_img = cropped_img.resize((32, 32), Image.ANTIALIAS)
+
+    # Normalização
+    img_array = np.array(resized_img).astype('float32')
     img_array = (img_array - mean) / std
     img_array = np.expand_dims(img_array, axis=0)
-    return img_array, original_img
 
+    return img_array, original_img
 
 def classify_user_image(model, img_array):
     predictions = model.predict(img_array)
     predicted_class_index = np.argmax(predictions, axis=1)[0]
-    predicted_class_name = class_names[predicted_class_index]
-    return predicted_class_name
+    return predicted_class_index, predictions[0]
 
-# Interface Streamlit
+# Interface
 st.title("🔍 Reconhecimento de Imagens - CIFAR-10")
-st.markdown("### Este modelo reconhece 10 categorias do CIFAR-10:")
+st.markdown("### Este modelo reconhece as categorias abaixo:")
 st.markdown("""
 - ✈️ Avião  
 - 🚗 Automóvel  
@@ -45,12 +58,21 @@ st.markdown("""
 - 🚛 Caminhão
 """)
 
-uploaded_file = st.file_uploader("Envie uma imagem:", type=["jpg", "png", "jpeg"])
+uploaded_file = st.file_uploader("📷 Envie uma imagem:", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
     img_array, original_img = preprocess_user_image(uploaded_file, mean, std)
-    predicted_class = classify_user_image(model, img_array)
+    class_index, probs = classify_user_image(model, img_array)
+    class_name = class_names[class_index]
 
-    st.image(original_img, caption="Imagem enviada", use_container_width=True)
+    # Exibir imagem original
+    st.image(original_img, caption="Imagem original enviada", use_container_width=True)
 
-    st.success(f"🧠 Classe prevista: **{predicted_class}**")
+    # Resultado
+    st.success(f"🧠 Classe prevista: **{class_name}**")
+
+    # Mostrar probabilidades
+    st.subheader("📊 Confiança do modelo para cada classe:")
+    for i, prob in enumerate(probs):
+        st.write(f"{class_names[i]}: {prob:.4f}")
+        st.progress(float(prob))
